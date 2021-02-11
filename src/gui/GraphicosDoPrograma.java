@@ -5,6 +5,8 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Ellipse2D;
@@ -13,27 +15,39 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 
 /**
  *
- * @author isaura, mundo da google, colaborador Staroski
+ * @author isaura, mundo da google, 
  * 
  * O mundo das figuras
  * 
  */
-public class GraphicosDoPrograma 
+public class GraphicosDoPrograma  implements Runnable
 {
     
     AffineTransform transformacaoOriginal = null;
+    
+    Thread thread;
+    static int posx= 0;
 
 	private int pixelsLarguraJanela = 10; // deve ser inicializado para algo positivo
 	private int pixelsAlturaJanela = 10; // deve ser inicializado para algo positivo
 
-	// O cliente pode chamar frame () ou redimensionar () primeiro,
+	// O cliente pode chamar quadroFiguras () ou redimensionar () primeiro,
         // e devemos nos inicializar de forma diferente dependendo do caso.
 	private boolean temUmaFrameRedimensionadaQueEstaSendoChamadaAntes = false;
+        
+        
+        public GraphicosDoPrograma ()
+        {
+            thread = new Thread(this);
+            
+        }
 
 	public int getWidth() 
         {
@@ -45,19 +59,30 @@ public class GraphicosDoPrograma
         }
         
         
-	private Graphics g = null;
-	private Graphics2D g2 = null;
-	private GeneralPath generalPath = new GeneralPath();
-	private Line2D line2D = new Line2D.Float();
-	private Path2D path2D = new Path2D.Float();
-	private Rectangle2D.Float rectangle2D = new Rectangle2D.Float();
-	private Ellipse2D.Float ellipse2D = new Ellipse2D.Float();
+	static public Graphics g = null;
+	static public Graphics2D g2 = null;
+	static public GeneralPath generalPath = new GeneralPath();
+	static public Line2D line2D = new Line2D.Float();
+	static public Path2D path2D = new Path2D.Float();
+	static public Rectangle2D.Float rectangle2D = new Rectangle2D.Float();
+	static public Ellipse2D.Float ellipse2D = new Ellipse2D.Float();
 	private Arc2D.Float arc2D = new Arc2D.Float();
 
+        
+        public ArrayList<Shape> shapes = new ArrayList<>();
+        
+        
 	public void set( Graphics g )
         { 
             this.g = g;
             this.g2 = (Graphics2D)g;
+             RenderingHints rh = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
+                            RenderingHints.VALUE_ANTIALIAS_ON);
+             
+                    g2.setRenderingHints(rh);
+                    
+                    g2.translate(posx, 0);
+                    
             this.transformacaoOriginal = g2.getTransform(); 
         
         }
@@ -75,11 +100,7 @@ public class GraphicosDoPrograma
         {
 		return fontAltura;
 	}
-        
-        
-        
-        
-        
+      
         
         private float offsetXInPixels = 0;
 	private float offsetYInPixels = 0;
@@ -125,7 +146,8 @@ public class GraphicosDoPrograma
 		offsetXInPixels += dx;
 		offsetYInPixels += dy;
 	}
-	public void zoomIn(float zoomFactor, //maior que 1 para aumentar o zoom, entre 0 e 1 para diminuir o zoom
+	public void zoomIn(float zoomFactor, //maior que 1 para aumentar o zoom,
+            // entre 0 e 1 para diminuir o zoom
 		float centerXInPixels,
 		float centerYInPixels) 
         {
@@ -154,7 +176,7 @@ public class GraphicosDoPrograma
 		Point2D M2 = Point2D.media(A_new, B_new );
 
 		// This is the translation that the world should appear to undergo.
-		Vector2D translation = Point2D.diff(M2, M1 );
+		Vector2D translacao = Point2D.diff(M2, M1 );
 
 		// Compute a vector associated with each pair of points.
 		Vector2D v1 = Point2D.diff(A_old, B_old );
@@ -165,13 +187,13 @@ public class GraphicosDoPrograma
 		float scaleFactor = 1;
 		if ( v1_length > 0 && v2_length > 0 )
 			scaleFactor = v2_length / v1_length;
-		pan( translation.x(), translation.y() );
+		pan( translacao.x(), translacao.y() );
 		zoomIn( scaleFactor, M2.x(), M2.y() );
 	}
         
         // vai facilitar nos eventos
         
-        public void frame(RectanguloAlinhado2D rect,boolean expande 
+        public void quadroFiguras(RectanguloAlinhado2D rect,boolean expande 
 // verdadeiro se o chamador quiser uma margem de espaço em branco adicionada ao redor do retângulo
 
 
@@ -180,7 +202,8 @@ public class GraphicosDoPrograma
 		assert pixelsLarguraJanela > 0 && pixelsAlturaJanela > 0;
 
 		if ( rect.isVazio() || rect.getDiagonal().x() == 0 || 
-                        rect.getDiagonal().y() == 0 ) {
+                        rect.getDiagonal().y() == 0 )
+                {
 			return;
 		}
 		if ( expande ) 
@@ -210,41 +233,46 @@ public class GraphicosDoPrograma
 	}
         
         
-        public void redimensionar( int w, int h ) {
-		if ( ! temUmaFrameRedimensionadaQueEstaSendoChamadaAntes ) {
+        public void redimensionar( int w, int h )
+        {
+		if ( ! temUmaFrameRedimensionadaQueEstaSendoChamadaAntes )
+                {
 			pixelsLarguraJanela = w;
 			pixelsAlturaJanela = h;
 			temUmaFrameRedimensionadaQueEstaSendoChamadaAntes = true;
 			return;
 		}
 
-		Point2D oldCenter = convertPixelParaMundoDasFormas( new Point2D(
+		Point2D centroAntigo = convertPixelParaMundoDasFormas( new Point2D(
 			pixelsLarguraJanela * 0.5f, pixelsAlturaJanela * 0.5f
 		) );
-		float radius = Math.min( pixelsLarguraJanela, pixelsAlturaJanela )
+		float radios = Math.min( pixelsLarguraJanela, pixelsAlturaJanela )
                         * 0.5f * scaleFactorInWorldSpaceUnitsPerPixel;
 
 
 		pixelsLarguraJanela = w;
 		pixelsAlturaJanela = h;
 
-		if ( radius > 0 ) {
-			frame(new RectanguloAlinhado2D(new Point2D( oldCenter.x() - radius, 
-                                                oldCenter.y() - radius ),
-					new Point2D( oldCenter.x() + radius,
-                                                oldCenter.y() + radius )
+		if ( radios > 0 ) {
+			quadroFiguras(new RectanguloAlinhado2D(new Point2D( centroAntigo.x() 
+                                        - radios, 
+                                                centroAntigo.y() - radios ),
+					new Point2D( centroAntigo.x() + radios,
+                                                centroAntigo.y() + radios )
 				),false);
 		}
 	}
         
         
-        public void setCordenadasDoSistemaParaPixels() {
+        public void setCordenadasDoSistemaParaPixels() 
+        {
 		AffineTransform transform = new AffineTransform();
 		g2.setTransform(transformacaoOriginal);
 		g2.transform(transform);
 	}
 
-	public void setCoordinateSystemToWorldSpaceUnits() {
+	public void setCoordinateSystemToWorldSpaceUnits() 
+        {
 		AffineTransform transform = new AffineTransform();
 		transform.translate( offsetXInPixels, offsetYInPixels );
 		float s = 1.0f/scaleFactorInWorldSpaceUnitsPerPixel;
@@ -253,6 +281,8 @@ public class GraphicosDoPrograma
 		g2.transform(transform);
 	}
 
+        //limpandoo a telaaaaaaaaaaaaaaaaaaaaaaaaaa
+        
 	public void clear( float r, float g, float b ) 
         {
 		setColor(r,g,b);
@@ -286,7 +316,8 @@ public class GraphicosDoPrograma
 		setColor( c.getRed()/255.0f, c.getGreen()/255.0f, c.getBlue()/255.0f, alpha );
 	}
 
-	public void setLineWidth( float width ) {
+	public void setLineWidth( float width ) 
+        {
 		g2.setStroke( new BasicStroke( width ) );
 	}
 
@@ -298,28 +329,34 @@ public class GraphicosDoPrograma
 /////////////////////////////////////////////////////////////////////
 		line2D.setLine( x1, y1, x2, y2 );
 		g2.draw( line2D );
+                System.out.println("Desenhei linhaaaa");
 	}
 
-	public void drawPolyline( ArrayList< Point2D > points, boolean isClosed,
-                boolean isFilled ) 
+	public void drawPolylinha( ArrayList< Point2D > pontos, boolean isFechado,
+                boolean isPintado ) 
         {
-		if ( points.size() <= 1 )
-			return;
+		if ( pontos.size() <= 1 )
+                {
+                    return;
+                }
                 
 		path2D.reset();
-		Point2D p = points.get(0);
+		Point2D p = pontos.get(0);
 		path2D.moveTo( p.x(), p.y() );
-		for ( int i = 1; i < points.size(); ++i ) {
-			p = points.get(i);
-			path2D.lineTo( p.x(), p.y() );
+		for ( int i = 1; i < pontos.size(); ++i ) 
+                {
+			p = pontos.get(i);
+			path2D.lineTo( p.x()+posx, p.y() );
+                         System.out.println("Desenhei polinhaaaa");
 		}
-		if ( isClosed )
+		if ( isFechado )
                 {
                     path2D.closePath();
                 }
-		if ( isFilled ) 
+		if ( isPintado ) 
                 {
                      g2.fill( path2D );
+                       System.out.println("Desenhei polinhaaaa");
                 }
 		else 
                 {
@@ -327,71 +364,97 @@ public class GraphicosDoPrograma
                 }
 	}
 
-	public void drawPolyline( ArrayList< Point2D > points ) {
-		drawPolyline( points, false, false );
+	public void drawPolylinha( ArrayList< Point2D > pontos )
+        {
+		GraphicosDoPrograma.this.drawPolylinha( pontos, false, false );
 	}
-	public void drawPolygon( ArrayList< Point2D > points ) {
-		drawPolyline( points, true, false );
+	public void drawPolygono( ArrayList< Point2D > pontos ) {
+		GraphicosDoPrograma.this.drawPolylinha( pontos, true, false );
 	}
-	public void fillPolygon( ArrayList< Point2D > points ) {
-		drawPolyline( points, true, true );
+	public void fillPolygono( ArrayList< Point2D > pontos )
+        {
+		GraphicosDoPrograma.this.drawPolylinha( pontos, true, true );
 	}
 
         //onde desenha a paleta de coresssssssssssssssssssssssssssssssssss
 	public void drawRect( float x, float y, float w, float h, boolean isFilled )
         {
-		if ( isFilled ) fillRect( x, y, w, h );
-		else drawRect( x, y, w, h );
+		if ( isFilled ) 
+                {
+                    fillRect( x, y, w, h );
+                }
+		else 
+                {
+                    drawRect( x, y, w, h );
+                }
 	}
 
-	public void drawRect( float x, float y, float w, float h ) {
-		rectangle2D.setRect( x, y, w, h );
+        
+        //Desenho do rectangulooooooo na tela para as cores//////////////////////////////////////
+	public void drawRect( float x, float y, float w, float h ) 
+        {
+		rectangle2D.setRect( x+posx, y, w, h );
 		g2.draw( rectangle2D );
 	}
         
 
-	public void fillRect( float x, float y, float w, float h ) {
-		rectangle2D.setRect( x, y, w, h );
+	public void fillRect( float x, float y, float w, float h ) 
+        {
+		rectangle2D.setRect( x+posx, y, w, h );
 		g2.fill( rectangle2D );
 	}
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	
+        //Criacao da Ellipse ou o ovallllllllllllllllllllllllllllllllllllllll
+        
+        public void drawCirculo( float x, float y, float radios, boolean isFilled )
+        {
+		ellipse2D.setFrame( x+posx, y, 2*radios, 2*radios );
+		if ( isFilled )
+                {
+                     g2.fill( ellipse2D );
+                }
+		else
+                {
+                     g2.draw( ellipse2D );
+                }
+	}
+        
+       
 
-	public void drawCircle( float x, float y, float radius, boolean isFilled ) {
-		ellipse2D.setFrame( x, y, 2*radius, 2*radius );
-		if ( isFilled ) g2.fill( ellipse2D );
-		else g2.draw( ellipse2D );
+	public void drawCirculo( float x, float y, float radius ) 
+        {
+		GraphicosDoPrograma.this.drawCirculo( x, y, radius, false );
 	}
 
-	public void drawCircle( float x, float y, float radius ) {
-		drawCircle( x, y, radius, false );
+	public void fillCirculo( float x, float y, float radius ) {
+		GraphicosDoPrograma.this.drawCirculo( x, y, radius, true );
 	}
 
-	public void fillCircle( float x, float y, float radius ) {
-		drawCircle( x, y, radius, true );
-	}
-
-	public void drawCenteredCircle( float x, float y, float radius, boolean isFilled ) {
+	public void drawCenteredCircle( float x, float y, float radius, boolean isFilled ) 
+        {
 		x -= radius;
 		y -= radius;
-		drawCircle( x, y, radius, isFilled );
+		GraphicosDoPrograma.this.drawCirculo( x, y, radius, isFilled );
 	}
 
 	public void drawArc(
 		float center_x, // increases right
 		float center_y, // increases down
-		float radius,
-		float startAngle, // in radians; zero for right, increasing counterclockwise
-		float angleExtent, // in radians; positive for counterclockwise
+		float radios,
+		float comecaAngulo, // in radians; zero for right, increasing counterclockwise
+		float anguloExtendido, // in radians; positive for counterclockwise
 		boolean isFilled
 	) {
 		if ( isFilled ) {
-			arc2D.setArcByCenter( center_x, center_y, radius, 
-                                startAngle/Math.PI*180.0f, angleExtent/
+			arc2D.setArcByCenter( center_x, center_y, radios, 
+                                comecaAngulo/Math.PI*180.0f, anguloExtendido/
                                         Math.PI*180.0f, Arc2D.PIE );
 			g2.fill( arc2D );
 		}
 		else {
-			arc2D.setArcByCenter( center_x, center_y, radius, 
-                                startAngle/Math.PI*180.0f, angleExtent/Math.PI*180.0f, 
+			arc2D.setArcByCenter( center_x, center_y, radios, 
+                                comecaAngulo/Math.PI*180.0f, anguloExtendido/Math.PI*180.0f, 
                                 Arc2D.OPEN );
 			g2.draw( arc2D );
 		}
@@ -415,8 +478,9 @@ public class GraphicosDoPrograma
 
 
 
-	// returns the width of a string
-	public float stringWidth( String s ) {
+	
+	public float stringWidth( String s )
+        {
 		if ( s == null || s.length() == 0 ) return 0;
 		if ( fontMetrics == null ) {
 			assert g2 != null;
@@ -427,17 +491,36 @@ public class GraphicosDoPrograma
 	}
 
 
-	public void drawString(
-		float x, float y,      // lower left corner of the string
-		String s           // the string
-	) {
-		if ( s == null || s.length() == 0 ) return;
+	public void drawString(float x, float y,String s) 
+        {
+		if ( s == null || s.length() == 0 ) 
+                {
+                    return;
+                }
 
 		g2.setFont( font );
-		g2.drawString(
-			s, x, y
-		);
+		g2.drawString(s, x, y);
 	}
+
+    @Override
+    public void run() {
+      
+        
+        while(true)
+        {
+            if(DesenhoSimples.btnClique)
+            {
+                posx+=10;
+                System.out.println("entrou o cliqueeeeeeeeeeeeeee");
+            }
+            
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException ex) {
+               ex.printStackTrace();
+            }
+        }
+    }
 
 
 

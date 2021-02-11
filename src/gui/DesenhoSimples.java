@@ -1,18 +1,26 @@
 
+
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import static java.awt.Component.TOP_ALIGNMENT;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -22,6 +30,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
 
 /**
@@ -37,6 +46,8 @@ import javax.swing.SwingUtilities;
 class MinhaForma 
 {
 	public static boolean habilitarComposicao = false;
+        
+        public static int posX = 0;
 
 	public static final int POLIGONO = 0;
 	public static final int CIRCULO = 1;
@@ -74,6 +85,11 @@ class MinhaForma
 			);
 		}
 	}
+        
+        public void translate(int x)
+        {
+         
+        }
 	public void rotacaoEmVoltaDoCentro( float anguloEmRadiano )
         {
 		rotateAndScaleAroundCenter( anguloEmRadiano, 1, 1 );
@@ -95,10 +111,10 @@ class MinhaForma
                         {
 				if ( isFilled ) {
 					gw.setColor( c );
-					gw.fillPolygon(pontos );
+					gw.fillPolygono(pontos );
 				}
 				gw.setColor( isHilited ? Color.black : Color.gray );
-				gw.drawPolygon(pontos );
+				gw.drawPolygono(pontos );
 			} 
                         break;
 			case CIRCULO:
@@ -115,24 +131,32 @@ class MinhaForma
 		}
 	}
 
-	boolean isPointInsideShape( Point2D p /* no espaco da tela */ ) {
+	boolean isPontoAoLadoDaForma( Point2D p /* no espaco da tela */ ) {
 		if ( tipo == POLIGONO ) {
 			return Point2DUtil.isPontoDentroDoPoligono(pontos, p );
 		}
 		else if ( tipo == CIRCULO ) {
-			float distanceSquared = Point2D.diff(p, centro ).
+			float distanciaDoQuadro = Point2D.diff(p, centro ).
                                 ComprimentoAoQuadrado();
 			float radiusOfCircleSquared = Point2D.diff(pontos.get(0), centro )
                                 .ComprimentoAoQuadrado();
-			return distanceSquared <= radiusOfCircleSquared;
+			return distanciaDoQuadro <= radiusOfCircleSquared;
 		}
 		return false;
 	}
 }
-
-class MinhaCanvas extends JPanel implements MouseListener, MouseMotionListener 
+//Meu painellllllllllllllllllllllllllllllllllll############################################# 
+//precisoooooo dessa classssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+class MinhaCanvas extends JPanel implements MouseListener, MouseMotionListener,Runnable 
 {
 
+         private int x;
+ 
+         private int y;
+         
+         
+ 
+        Thread thread;
 	DesenhoSimples simplesDesenho;
 	GraphicosDoPrograma gw = new GraphicosDoPrograma();
 
@@ -149,8 +173,9 @@ class MinhaCanvas extends JPanel implements MouseListener, MouseMotionListener
         // exceto para qualquer forma que está sendo criada.
 
 
-	ArrayList< MinhaForma > formas = new ArrayList< MinhaForma >();
-
+	public static ArrayList< MinhaForma > formas = new ArrayList< MinhaForma >();
+        
+       
 	int mouse_x, mouse_y, old_mouse_x, old_mouse_y;
 
 	// Eles são usados ​​durante a criação de uma nova forma.
@@ -173,6 +198,7 @@ class MinhaCanvas extends JPanel implements MouseListener, MouseMotionListener
 
 	public MinhaCanvas( DesenhoSimples sp ) 
         {
+                thread = new Thread(this);
 		simplesDesenho = sp;
 		setBorder( BorderFactory.createLineBorder( Color.black ) );
                 
@@ -180,6 +206,11 @@ class MinhaCanvas extends JPanel implements MouseListener, MouseMotionListener
                 //////////////////////////////////////////eventos add aquiiiiiii
 		addMouseListener( this );
 		addMouseMotionListener( this );
+                //addMouseListener( simplesDesenho. );
+                 DesenhoSimples.btn.addActionListener(new  DesenhoSimples());
+                  DesenhoSimples.btn0.addActionListener(new  DesenhoSimples());
+                 
+                
 
 		radialMenu.setItemLabelAndID(RadialMenuPaleta.CENTRAL_ITEM,           "",     
                         sp.FERRAMENTA_SELECIONADA_E_MOVIDA );
@@ -215,33 +246,50 @@ class MinhaCanvas extends JPanel implements MouseListener, MouseMotionListener
 		controleMenu.setItemLabelAndID( 3, "Zoom", sp.OPERATION_ZOOM );
 		controleMenu.setItemLabelAndID( 2, "Pan", sp.OPERATION_PAN );
 
+               
+                //System.out.println(""+formas.clone());
 	}
+        
+        
+        
         @Override
 	public Dimension getPreferredSize() {
-		return new Dimension( MyFinal.TAMANHO_LARGURA_INICIAL_JANELA, MyFinal.TAMANHO_ALTURA_INICIAL_JANELA );
+		return new Dimension( MyFinal.TAMANHO_LARGURA_INICIAL_JANELA, 
+                        MyFinal.TAMANHO_ALTURA_INICIAL_JANELA );
 	}
-	public void limpar() {
+	public void limpar() 
+        {
 		formas.clear();
 		repaint();
 	}
+        
+        /* pintandooooo*/
         @Override
 	public void paintComponent( Graphics g )
         {
 		super.paintComponent( g );
+                
+                Graphics2D g2 = (Graphics2D)g;
+                
+                RenderingHints rh = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
+                            RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setRenderingHints(rh);
+                    
+                  
+                    //onde foi chamdo o set Do graphicoPrograma......................
+                    
+                    
 		gw.set( g );
                 
-                g.fillRect(500, 100, 100, 100);
+                
 		if ( getWidth() != gw.getWidth() || getHeight() != gw.getHeight() )
 			gw.redimensionar( getWidth(), getHeight() );
 		gw.clear(1,1,1);
 		gw.setupForDrawing();
 		gw.setCoordinateSystemToWorldSpaceUnits();
 		gw.enableAlphaBlending();
-
-		for ( int i = 0; i < formas.size(); ++i ) {
-			MinhaForma shape = formas.get(i);
-			shape.draw( gw, true, i == currentlyHilitedShape );
-		}
+                    
+		
 		if ( is2ndPointBeingDraggedOut || is3rdPointBeingDraggedOut ) {
 			assert formaEstandoForaDragged != null;
 			formaEstandoForaDragged.draw( gw, false, true );
@@ -255,7 +303,26 @@ class MinhaCanvas extends JPanel implements MouseListener, MouseMotionListener
 			radialMenu.draw( gw );
 		if ( controleMenu.estaVisivel() )
 			controleMenu.draw( gw );
+                for ( int i = 0; i < formas.size(); ++i ) {
+                    
+//#######      ##############              //coloquei o rotate e translate  aquiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii!!!!
+                     //g2.translate(x, 0);
+                     //g2.rotate(x);
+			MinhaForma shape = formas.get(i);
+			shape.draw( gw, true, i == currentlyHilitedShape );
+		}
+                
+                //g2.rotate(Math.toRadians(DesenhoSimples.xa),100,100);
+               g2.translate(DesenhoSimples.xa,0);
+               
+                
+                 //MinhaCanvas.formas.get(0).scaleAroundCenter(10, 10);
 	}
+        
+        //Escolhe qual figura pretendes desenhar??
+        
+        
+        ///////////////////////////////////////////////////////////////////////////////////////
 
 	private static void usoDePostoEspecificadoParaCalcularAfORMA(
 		int ferramentaAtual,
@@ -340,6 +407,10 @@ class MinhaCanvas extends JPanel implements MouseListener, MouseMotionListener
 				break;
 		}
 	}
+        
+        /////////////////////////////////////////////////////////////////////////////////////
+        
+        /* numero de pontos usados para calcular forma*/
 
 	private static int numPontoUsadoParaCalcularForma( int ferramentaAtual )
         {
@@ -376,7 +447,7 @@ class MinhaCanvas extends JPanel implements MouseListener, MouseMotionListener
         {
 		for ( int i = formas.size()-1; i >= 0; --i ) {
 			MinhaForma shape = formas.get(i);
-			if ( shape.isPointInsideShape(
+			if ( shape.isPontoAoLadoDaForma(
 				gw.convertPixelParaMundoDasFormas( new Point2D(x,y) )
 			) ) {
 				return i;
@@ -404,11 +475,16 @@ class MinhaCanvas extends JPanel implements MouseListener, MouseMotionListener
 		mouse_x = e.getX();
 		mouse_y = e.getY();
 
-
+                x = e.getX();
+                y = e.getY();
 		// Esta informação é salva para mais tarde,
                 // caso seja necessário para implementar operações no controleMenu
 
-
+                 System.out.println("Formas:"+formas.size());
+                //formas.add(0, formaEstandoForaDragged);
+                
+                //sempre que estiver na telaaaaaa desaparece@@@@@@@@@@@@@@@@@@@@##############
+                //formas.clear(); //desenha primeiro e quando pressionar desapareceeeeee
 		int i = indiceDaFormaSobPixel(mouse_x,mouse_y);
 		formaSobreCursorNoComecoDoDrag = i>=0 ? formas.get(i) : null;
 
@@ -568,6 +644,9 @@ class MinhaCanvas extends JPanel implements MouseListener, MouseMotionListener
 				isRolando = false;
 			}
 		}
+                
+                System.out.println("x:"+old_mouse_x+"y:"+old_mouse_y);
+                
 	}
 
         @Override
@@ -616,6 +695,11 @@ class MinhaCanvas extends JPanel implements MouseListener, MouseMotionListener
         @Override
 	public void mouseDragged( MouseEvent e ) 
         {
+            
+                int dx = e.getX() - x;
+ 
+                int dy = e.getY() - y;
+ 
 		old_mouse_x = mouse_x;
 		old_mouse_y = mouse_y;
 		mouse_x = e.getX();
@@ -655,14 +739,15 @@ class MinhaCanvas extends JPanel implements MouseListener, MouseMotionListener
 							gw.convertPixelParaMundoDasFormas( new Point2D( old_mouse_x, old_mouse_y ) ),
 							gw.convertPixelParaMundoDasFormas( new Point2D( mouse_x, mouse_y ) )
 						);
-						formaSobreCursorNoComecoDoDrag.centro.copiar(Point2DUtil.calcularCentroidDosPontos(formaSobreCursorNoComecoDoDrag.pontos ) );
+						formaSobreCursorNoComecoDoDrag.centro.copiar(Point2DUtil.calcularCentroidDosPontos
+                                    (formaSobreCursorNoComecoDoDrag.pontos ) );
 					}
 					break;
 				case DesenhoSimples.OPERACAO_ROTATE:
 					if ( formaSobreCursorNoComecoDoDrag != null) {
-						Point2D shapeCenter = gw.convertWorldSpaceUnitsToPixels(formaSobreCursorNoComecoDoDrag.centro );
-						Vector2D v1 = new Vector2D( old_mouse_x-shapeCenter.x(), old_mouse_y-shapeCenter.y() );
-						Vector2D v2 = new Vector2D( mouse_x-shapeCenter.x(), mouse_y-shapeCenter.y() );
+						Point2D foemaCentro = gw.convertWorldSpaceUnitsToPixels(formaSobreCursorNoComecoDoDrag.centro );
+						Vector2D v1 = new Vector2D( old_mouse_x-foemaCentro.x(), old_mouse_y-foemaCentro.y() );
+						Vector2D v2 = new Vector2D( mouse_x-foemaCentro.x(), mouse_y-foemaCentro.y() );
 						formaSobreCursorNoComecoDoDrag.rotacaoEmVoltaDoCentro(
 							Vector2D.anguloDeCalculoAssinado( v1, v2 )
 						);
@@ -670,9 +755,9 @@ class MinhaCanvas extends JPanel implements MouseListener, MouseMotionListener
 					break;
 				case DesenhoSimples.OPERATION_ROTATE_AND_UNIFORMLY_SCALE:
 					if ( formaSobreCursorNoComecoDoDrag != null) {
-						Point2D shapeCenter = gw.convertWorldSpaceUnitsToPixels(formaSobreCursorNoComecoDoDrag.centro );
-						Vector2D v1 = new Vector2D( old_mouse_x-shapeCenter.x(), old_mouse_y-shapeCenter.y() );
-						Vector2D v2 = new Vector2D( mouse_x-shapeCenter.x(), mouse_y-shapeCenter.y() );
+						Point2D formaCentro = gw.convertWorldSpaceUnitsToPixels(formaSobreCursorNoComecoDoDrag.centro );
+						Vector2D v1 = new Vector2D( old_mouse_x-formaCentro.x(), old_mouse_y-formaCentro.y() );
+						Vector2D v2 = new Vector2D( mouse_x-formaCentro.x(), mouse_y-formaCentro.y() );
 						float uniformScaleFactor = (float)Math.pow(MyFinal.zoomFactorPerPixelDragged, v2.length()-v1.length());
 						formaSobreCursorNoComecoDoDrag.rotateAndScaleAroundCenter(
 							Vector2D.anguloDeCalculoAssinado( v1, v2 ),
@@ -718,11 +803,13 @@ class MinhaCanvas extends JPanel implements MouseListener, MouseMotionListener
 			MinhaForma shape = formas.get(currentlyHilitedShape);
 			shape.translate( Point2D.diff(
 				gw.convertPixelParaMundoDasFormas( new Point2D( mouse_x, mouse_y ) ),
-				gw.convertPixelParaMundoDasFormas( new Point2D( old_mouse_x, old_mouse_y ) )
+				gw.convertPixelParaMundoDasFormas( new Point2D( old_mouse_x, 
+                                        old_mouse_y ) )
 			) );
 			repaint();
 		}
-		else if ( is2ndPointBeingDraggedOut || is3rdPointBeingDraggedOut ) {
+		else if ( is2ndPointBeingDraggedOut || is3rdPointBeingDraggedOut ) 
+                {
 			if ( is2ndPointBeingDraggedOut ) {
 				x2 = x3 = mouse_x;
 				y2 = y3 = mouse_y;
@@ -749,7 +836,41 @@ class MinhaCanvas extends JPanel implements MouseListener, MouseMotionListener
 			gw.pan( delta_x, delta_y );
 			repaint();
 		}
+                
+                if(GraphicosDoPrograma.ellipse2D.contains(x,y))
+                {
+                    GraphicosDoPrograma.ellipse2D.x += dx;
+ 
+                    GraphicosDoPrograma.ellipse2D.y += dy;
+ 
+                    repaint();
+                }
+                
+                x += dx;
+ 
+                y += dy;
 	}
+
+    @Override
+    public void run() {
+     
+        while(true)
+        {
+            if(DesenhoSimples.btnClique)
+            {
+                MinhaForma.posX++;
+            }
+            this.repaint();
+            
+            try 
+            {
+                Thread.sleep(10);
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+                System.out.println("Nao foi possivel ");
+            }
+        }
+    }
 
 }
 
@@ -757,13 +878,22 @@ public class DesenhoSimples implements ActionListener
 {
 
 	static final String nomeDaApplicacao = "Meu Programa de Desenho e Animacao";
-
+        static int xa = 0;
+        Timer tempo = new Timer(5,this);
+        
+         public static JButton btn,btn0,btn1;
+         static Boolean btnClique;
 	JFrame janela;
 	Container panelDeFerramentas;
 	MinhaCanvas canvas;
 
 	JMenuItem limparMenuItem, sairMenuItem, aboutMenuItem;
 	JCheckBoxMenuItem toolsMenuItem, colorsMenuItem, enableCompositingMenuItem;
+        
+        public DesenhoSimples()
+        {
+            tempo.start();
+        }
 
 	public static final int FERRAMENTA_SELECIONADA_E_MOVIDA = 0;
 	public static final int FERRAMENTA_CRIADA_QUADRADO = 1;
@@ -791,10 +921,42 @@ public class DesenhoSimples implements ActionListener
 		atualFerramenta = ferramenta;
 		botoesFerramenta[ferramenta].setSelected(true);
 	}
+        
+       
 
         @Override
 	public void actionPerformed(ActionEvent e)
         {
+            
+                if(btn == e.getSource())
+                {
+                    System.out.println("Clicaste me!!");
+                    this.btnClique = true;
+                   
+                   
+                  for( int i = 0;i< MinhaCanvas.formas.size();i++)
+                  {
+                      MinhaCanvas.formas.get(i).rotacaoEmVoltaDoCentro(xa);
+                      
+                      // MinhaCanvas.formas.get(i).scaleAroundCenter(100, TOP_ALIGNMENT);
+                  }
+                    // MinhaCanvas.formas.get(1).rotacaoEmVoltaDoCentro(10);
+                   
+                    ///System.out.println(""+MinhaCanvas.formas.clone().toString());
+                   // MinhaCanvas.formas.clone();
+                }
+                xa+=100;
+                
+                if(btn0 == e.getSource())
+                {
+                    
+                    for(int i = 0;i<MinhaCanvas.formas.size();i++)
+                   {
+                       MinhaCanvas.formas.get(i).scaleAroundCenter(10, 10);
+                        //MinhaCanvas.formas.get(i).rotateAndScaleAroundCenter(100, 100, 100);
+                   }
+   
+                }
 		Object fonte = e.getSource();
 		if ( fonte == limparMenuItem ) {
 			canvas.limpar();
@@ -874,6 +1036,14 @@ public class DesenhoSimples implements ActionListener
 
 		janela = new JFrame( nomeDaApplicacao );
 		janela.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+                
+               
+                
+                btn= new JButton("Rotacionar");
+                btn0 = new JButton("Play");
+                btn1 = new JButton("Translate");
+                //btn.setBounds(100, 100,100,100);
+                
 
 		JMenuBar menuBar = new JMenuBar();
 			JMenu menu = new JMenu("Arquivo");
@@ -922,6 +1092,15 @@ public class DesenhoSimples implements ActionListener
 		pane.setLayout( new BoxLayout( pane, BoxLayout.X_AXIS ) );
 		pane.add(panelDeFerramentas );
 		pane.add( canvas );
+                
+                btn.setOpaque(false);
+                btn.setContentAreaFilled(false);
+                btn0.setOpaque(false);
+                btn0.setContentAreaFilled(false);
+                //btn.setBorderPainted(false);
+                
+                pane.add(btn,BorderLayout.SOUTH);
+                pane.add(btn0);
 
 		ButtonGroup group = new ButtonGroup();
 		for ( int i = 0; i < NUM_FERRAMENTAS; ++i )

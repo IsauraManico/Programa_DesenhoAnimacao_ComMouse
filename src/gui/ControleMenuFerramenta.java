@@ -30,7 +30,9 @@ public class ControleMenuFerramenta extends RadialMenuPaleta
 	public int dragEvent( int x, int y )
         {
 		if ( ! estaVisivel )
-			return EVENTO_NAO_CONSUMIDO;
+                {
+                    return EVENTO_NAO_CONSUMIDO;
+                }
 
 		if ( estaEmModoMenu ) 
                 {
@@ -44,7 +46,7 @@ public class ControleMenuFerramenta extends RadialMenuPaleta
 			return retornaValor;
 		}
 
-		// O widget não está no modo de menu, está no modo de arrastar,
+		// a paleta não está no modo de menu, está no modo de arrastar,
 // e o cliente deve processar o evento.
 
 
@@ -55,7 +57,9 @@ public class ControleMenuFerramenta extends RadialMenuPaleta
 	public void draw(GraphicosDoPrograma gw)
         {
 		if ( ! estaVisivel )
-			return;
+                {
+                    return;
+                }
 
 		drawMenuItems( gw, estaEmModoMenu, true, menuRaio );
 	}

@@ -6,7 +6,8 @@ import java.awt.Color;
  *
  * @author isaura, google, yutube
  */
-public class RadialMenuPaleta extends PaletasPersonalizadas{
+public class RadialMenuPaleta extends PaletasPersonalizadas
+{
     
     
     
@@ -212,7 +213,7 @@ public class RadialMenuPaleta extends PaletasPersonalizadas{
 
 		if ( drawUsingPieStyle ) {
 			gw.setColor( foregroundColor2, alpha );
-			gw.fillCircle(
+			gw.fillCirculo(
 				x0-radiusOfPie, y0-radiusOfPie,
 				radiusOfPie
 			);
@@ -222,45 +223,19 @@ public class RadialMenuPaleta extends PaletasPersonalizadas{
 			gw.setColor( foregroundColor, alpha );
 		else
 			gw.setColor( backgroundColor, alpha );
-		gw.fillCircle(x0-zonaNeutralDosRaios, y0-zonaNeutralDosRaios,
+		gw.fillCirculo(x0-zonaNeutralDosRaios, y0-zonaNeutralDosRaios,
 			zonaNeutralDosRaios
 		);
 		if ( ! isItemHilited( CENTRAL_ITEM ) )
 			gw.setColor( foregroundColor );
 		else
 			gw.setColor( backgroundColor );
-		gw.drawCircle(x0-zonaNeutralDosRaios, y0-zonaNeutralDosRaios,
+		gw.drawCirculo(x0-zonaNeutralDosRaios, y0-zonaNeutralDosRaios,
 			zonaNeutralDosRaios
 		);
 
 
-		/*
-			Abaixo, temos o quadrante superior direito do menu radial.
-                + --------- + \
-                | item 1 | ) heightOfItems
-                + --------- + /
-                . ) margemEntreOsItens
-                . + --------- + \
-                . | item 2 | ) heightOfItems
-                . + --------- + /
-                . . ) margemEntreOsItens
-                .. + --------- + \
-                o ...... | item 3 | ) heightOfItems
-                + --------- + /
-                Seja r a distância do centro do menu "o" ao centro do item 1,
-                e também a distância de "o" ao centro do item 3.
-                Da foto, temos
-                r == heightOfItems / 2 + margemEntreOsItens + heightOfItems
-                + margemEntreOsItens + heightOfItems / 2
-                == 2 * (heightOfItems + margemEntreOsItens)
-                Seja r 'a distância de "o" ao centro do item 2.
-                Essa distância é medida ao longo de uma linha inclinada a 45 graus.
-                Conseqüentemente
-                r '/ sqrt (2) == heightOfItems / 2 + margemEntreOsItens
-                + heightOfItems / 2
-                r '== sqrt (2) * (heightOfItems + margemEntreOsItens)
-                == r / sqrt (2)
-		*/
+		
 		int heightOfItem = textHeight + 2*marginAroundText;
 		float radius = 2*( heightOfItem + margemEntreOsItens );
 		float radiusPrime = radius / (float)Math.sqrt(2.0f);

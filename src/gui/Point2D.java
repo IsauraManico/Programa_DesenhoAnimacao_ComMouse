@@ -67,8 +67,8 @@ public class Point2D {
 		return new Point2D( a.x()-b.x(), a.y()-b.y() );
 	}
 
-	public float distance( Point2D otherPoint ) {
-		return diff( this, otherPoint ).length();
+	public float distancia( Point2D outroPonto ) {
+		return diff( this, outroPonto ).length();
 	}
 
 	static Point2D media( Point2D a, Point2D b ) {

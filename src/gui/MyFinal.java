@@ -7,8 +7,8 @@
 public class MyFinal
 {
     
-    public static final int TAMANHO_LARGURA_INICIAL_JANELA = 600;
-	public static final int TAMANHO_ALTURA_INICIAL_JANELA = 600;
+    public static final int TAMANHO_LARGURA_INICIAL_JANELA = 800;
+	public static final int TAMANHO_ALTURA_INICIAL_JANELA = 700;
 
 	public static final boolean TEXTO_GRANDE_LABEL = false;
 

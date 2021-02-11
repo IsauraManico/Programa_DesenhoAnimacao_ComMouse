@@ -1,23 +1,24 @@
 
-package dao;
-
 /**
  *
  * @author isaura
  */
-public class Objeto 
-{
-    private int posX, posY, largura, altura;
-    private int velX = 0,  velY = 0;
+public class Objecto {
+    
+      private int posX,posY,largura,altura;
+    private int velX = 0, velY = 0;
     
     
-    public Objeto()
+    public Objecto()
     {
-        this.posX = 0;
-        this.posY = 0;
-        this.largura = 0;
-        this.altura = 0;
         
+    }
+
+    public Objecto(int posX, int posY, int largura, int altura) {
+        this.posX = posX;
+        this.posY = posY;
+        this.largura = largura;
+        this.altura = altura;
     }
 
     public int getPosX() {
@@ -68,8 +69,6 @@ public class Objeto
         this.velY = velY;
     }
     
-    
-   
     
     
 }

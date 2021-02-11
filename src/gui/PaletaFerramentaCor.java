@@ -142,6 +142,7 @@ public class PaletaFerramentaCor extends PaletasPersonalizadas
 	}
         
         
+        @Override
         public int moveEvent( int x, int y ) {
 		mouse_x = x;
 		mouse_y = y;
@@ -169,7 +170,8 @@ public class PaletaFerramentaCor extends PaletasPersonalizadas
 		return EVENTO_NAO_CONSUMIDO;
 	}
         
-        private void drawTriangle( GraphicosDoPrograma gw, int indice ) {
+        private void drawTriangulo( GraphicosDoPrograma gw, int indice )
+        {
 		// desenha o cursor triangular abaixo da cor atualmente selecionada
 
 		final int alturaDoTriangulo = 10;
@@ -186,69 +188,61 @@ public class PaletaFerramentaCor extends PaletasPersonalizadas
 			points.get(0).x() + alturaDoTriangulo,
 			points.get(1).y()
 		) );
-		gw.fillPolygon( points );
+		gw.fillPolygono( points );
 	}
 
-	public void draw( GraphicosDoPrograma gw ) {
+	public void draw( GraphicosDoPrograma gw )
+        {
 		if ( ! estaVisivel )
-			return;
+                {
+                    return;
+                }
 
 		gw.setColor( Color.black );
-		gw.drawRect(x0,
-			y0,
-			larguraDaPaleta() - 1,
-			alturaDeLidar - 1
-		);
-		if ( isHandleHilited ) {
+		gw.drawRect(x0,y0,larguraDaPaleta() - 1,alturaDeLidar - 1);
+		if ( isHandleHilited )
+                {
 			gw.setColor( Color.lightGray );
-			gw.fillRect(x0 + 1,
-				y0 + 1,
-				larguraDaPaleta() - 2,
-				alturaDeLidar - 2
-			);
+			gw.fillRect(x0 + 1,y0 + 1,larguraDaPaleta() - 2,alturaDeLidar - 2);
 		}
 
 		// desenha um triângulo para indicar qual amostra está atualmente selecionada
 		gw.setColor( Color.black );
-		drawTriangle(gw, indiceAtualDaCorSelecionada );
+		drawTriangulo(gw, indiceAtualDaCorSelecionada );
 
-		if (
-			indiceAtualDoEventoCorSelec >= 0
+		if (indiceAtualDoEventoCorSelec >= 0
 			&& indiceAtualDoEventoCorSelec != indiceAtualDaCorSelecionada
-		) {
+		) 
+                {
 			// desenhe um triângulo para a amostra hilited
 
 
-			gw.setColor( Color.gray );
-			drawTriangle(gw, indiceAtualDoEventoCorSelec );
+			gw.setColor( Color.ORANGE );
+			drawTriangulo(gw, indiceAtualDoEventoCorSelec );
 		}
 
                 //desenhando os retangulos da paleta de ferramenta de cor
-		for ( int i = 0; i < cores.size(); ++i ) {
+		for ( int i = 0; i < cores.size(); ++i ) 
+                {
 			gw.setColor( Color.black );
 			gw.drawRect(x0 + i*larguraDeCadaAmostra,
 				y0 + alturaDeLidar,
 				larguraDeCadaAmostra - 1,
-				alturaDeCadaAmostra - 1
-			);
+				alturaDeCadaAmostra - 1);
 			gw.setColor(cores.get( i ) );
 			gw.fillRect(x0 + i*larguraDeCadaAmostra + 1,
 				y0 + alturaDeLidar + 1,
 				larguraDeCadaAmostra - 2,
-				alturaDeCadaAmostra - 2
-			);
-                        
-                        
-                        
-                        
-                       
+				alturaDeCadaAmostra - 2);
+                          
 		}
                 
                 
                 //paleta para a timeline
-                for ( int i = 0; i < cores.size(); ++i ) {
-			gw.setColor( Color.black );
-			gw.drawRect(x0 + i*larguraDeCadaAmostra+100,
+                for ( int i = 0; i < cores.size(); ++i ) 
+                {
+			gw.setColor( cores.get( i ) );
+			gw.fillRect(x0 + i*larguraDeCadaAmostra+200,
 				y0+650 + alturaDeLidar,
 				larguraDeCadaAmostra - 1,
 				alturaDeCadaAmostra - 1
@@ -264,9 +258,9 @@ public class PaletaFerramentaCor extends PaletasPersonalizadas
                         
                         
                         gw.setColor(Color.red);
-                        gw.drawRect(300, 300, 300, 300);
+                        //gw.drawRect(300, 300, 300, 300);
                         
-                        gw.drawString(250, 650, "Em desenvolvimento para a timeLine se der certo hhhhhh");
+                       // gw.drawString(250, 650, "Em desenvolvimento para a timeLine se der certo hhhhhh");
                         
                         System.out.println("Desenhou txeee");
 		}

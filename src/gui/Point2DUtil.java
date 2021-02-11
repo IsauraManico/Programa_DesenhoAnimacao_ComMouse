@@ -55,14 +55,6 @@ public class Point2DUtil {
 
 	static public boolean isPontoDentroDoPoligono( ArrayList< Point2D > polygonPoints, 
                 Point2D q ) {
-		// Este código foi copiado, com pequenas alterações, de
-// http://local.wasp.uwa.edu.au/~pbourke/geometry/insidepoly/
-// onde (o código, não o algoritmo) é atribuído a Randolph Franklin.
-// A ideia por trás do algoritmo é imaginar um raio projetando
-// do ponto para a direita e, em seguida, conte quantas vezes
-// esse raio cruza uma aresta do polígono.
-// Se o número for ímpar, o ponto está dentro do polígono.
-
 
 		boolean returnValue = false;
 		int i, j;
